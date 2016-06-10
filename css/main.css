@@ -147,6 +147,16 @@ body {
 	display: none;
 }
 
+#map {
+	z-index: 4;
+	height: 288px;
+	width: 360px;
+	position: relative;
+	overflow: visible;
+	border: 1px solid black;
+	margin: 10px auto 0px auto;
+}
+
 .audiosketch {
 	background-color: rgba(200,250,200,0.5);
 	z-index: 4;

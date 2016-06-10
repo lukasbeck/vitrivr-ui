@@ -2,10 +2,15 @@ videojs.options.flash.swf = "video-js.swf";
 var shotStartTime = 0;
 
 function remove_emenent(arr, val) {
-    var i = arr.indexOf(val);
-         return i>-1 ? this.splice(i, 1) : [];
-  };
+	var i = arr.indexOf(val);
+	return i>-1 ? this.splice(i, 1) : [];
+};
 
+/* map */
+var map;
+$(document).ready(function() {
+	map = new Map($('#map').get(0));
+});
 
 $(function() {
 	/*  sliders  */
@@ -159,23 +164,51 @@ $(function() {
 	});
 
 	$('#colorsketchbutton').on('click', function(event) {
+		$('.query-input-container').show();
+		$('.colorsketch').show();
 		$('.motionsketch').hide();
+		$('#map').hide();
+
+		$('#btnAddCanvas').show();
 		$('#color-tool-pane').show();
 		$('#sidebarextension').removeClass('open');
 		$('#btnShowSidebar').removeClass('open');
+
 		$(this).parent().siblings().removeClass('active');
 		$(this).parent().addClass('active');
 	});
 
 	$('#motionsketchbutton').on('click', function(event) {
+		$('.query-input-container').show();
+		$('.colorsketch').hide();
 		$('.motionsketch').show();
+		$('#map').hide();
+
+		$('#btnAddCanvas').show();
 		$('#color-tool-pane').hide();
 		$('#sidebarextension').removeClass('open');
 		$('#btnShowSidebar').removeClass('open');
+
 		$(this).parent().siblings().removeClass('active');
 		$(this).parent().addClass('active');
-
 	});
+
+	$('#spatialbutton').on('click', function(event) {
+		$('.query-input-container').hide();
+		$('.colorsketch').hide();
+		$('.motionsketch').hide();
+		$('#map').show();
+		map.resize();
+
+		$('#btnAddCanvas').hide();
+		$('#color-tool-pane').hide();
+		$('#sidebarextension').removeClass('open');
+		$('#btnShowSidebar').removeClass('open');
+
+		$(this).parent().siblings().removeClass('active');
+		$(this).parent().addClass('active');
+	});
+
 	$('#filterbutton').on('click', function(event) {
 		$('.motionsketch').show();
 		$('#color-tool-pane').hide();

@@ -15,6 +15,8 @@
 		<link type="text/css" rel="stylesheet" href="video-js.css" media="screen,projection" />
 		<link type="text/css" rel="stylesheet" href="css/main.css"  media="screen,projection"/>
 
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBI2-D4Uah81ym41yeEeQ3CJUfhvFs9RyU"></script>
+
 		<script type="text/javascript" src="js/config.js"></script>
 		<script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
 		<script type="text/javascript" src="js/interact.min.js"></script>
@@ -22,6 +24,7 @@
 		<script type="text/javascript" src="js/oboe-browser.js"></script>
 		<script type="text/javascript" src="js/motionCanvas.js"></script>
 		<script type="text/javascript" src="js/sketchCanvas.js"></script>
+		<script type="text/javascript" src="js/map.js"></script>
 		<script type="text/javascript" src="js/materialize.min.js"></script>
 		<script type="text/javascript" src="js/spectrum.js"></script>
 		<script type="text/javascript" src="js/nouislider.js"></script>
@@ -85,6 +88,12 @@
 					<span id="motionsketchbutton"><i class="mdi mdi-run"> </i></span>
 				</li>
 				<li>
+					<span id="spatialbutton"><i class="mdi mdi-map-marker-radius"></i></span>
+				</li>
+				<li>
+					<span id="temoralbutton"><i class="mdi mdi-clock"></i></span>
+				</li>
+				<li>
 					<span id="filterbutton"><i class="mdi mdi-filter"> </i></span>
 				</li>
 			</ul>
@@ -110,6 +119,7 @@
 				</div>
 			</div>
 			<div id="query-container-pane" ></div>
+			<div id="map"></div>
 			<button id="btnAddCanvas" class="btn-floating btn-large waves-effect waves-light red">
 				<i class="material-icons">add</i>
 			</button>

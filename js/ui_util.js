@@ -97,7 +97,7 @@ function addShotContainer(shotInfo, containerId){ //TODO optimize
 		
 		'<div class="shotbox" id="s' + shotInfo.shotid + '" data-startframe="' + shotInfo.start + '" data-endframe="' + shotInfo.start + '">' + 
 		'<span class="preview">' +
-		'<img class="thumbnail" src="' + thumbnailHost + '' + shotInfo.videoid + '/' + shotInfo.shotid + '.' + thumbnailFileType + '" />' + //see config.js
+		'<img class="thumbnail" src="' + thumbnailHost + '/' + shotInfo.videoid + '/' + shotInfo.shotid + '.' + thumbnailFileType + '" />' + //see config.js
 		'<div class="tophoverbox">' +
 		'<span class="material-icons searchbutton">search</span>' +
 		'<span class="material-icons playbutton">play_arrow</span>' +
@@ -233,7 +233,7 @@ function playShot(event){
 	var shotId = parseInt(shotBox.attr('id').substring(1));
 	var shotInfo = Shots[shotId];
 	var videoInfo = Videos[shotInfo.videoid];
-	var path = videoHost + videoInfo.path;
+	var path = videoHost + '/' + videoInfo.path;
 	shotStartTime = shotInfo.start / 25;
 	var player = videojs('videoPlayer');
 
