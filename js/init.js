@@ -12,10 +12,32 @@ $(document).ready(function() {
 	map = new Map($('#map').get(0));
 });
 
+function updateSliders() {
+
+	ScoreWeights.globalcolor = $('#global-color-weight').get(0).noUiSlider.get();
+	ScoreWeights.localcolor = $('#local-color-weight').get(0).noUiSlider.get();
+	ScoreWeights.edge = $('#edge-weight').get(0).noUiSlider.get();
+	ScoreWeights.motion = $('#motion-weight').get(0).noUiSlider.get();
+	normalizeScoreWeights();
+
+	updateScores(true);
+
+}
+
+function readSliders() {
+
+	ScoreWeights.globalcolor = $('#global-color-weight').get(0).noUiSlider.get();
+	ScoreWeights.localcolor = $('#local-color-weight').get(0).noUiSlider.get();
+	ScoreWeights.edge = $('#edge-weight').get(0).noUiSlider.get();
+	ScoreWeights.motion = $('#motion-weight').get(0).noUiSlider.get();
+
+}
+
+
 $(function() {
 	/*  sliders  */
 	noUiSlider.create($('#draw-radius').get(0), {
-		start : 10,
+		start : 50,
 		step : 1,
 		range : {
 			'min' : 1,
@@ -32,8 +54,8 @@ $(function() {
 			shotInputs[el].color.setLineWidth(width);
 		}
 
-	}); 
-	
+	});
+
 	noUiSlider.create($('#global-color-weight').get(0), {
 		start : 100 * ScoreWeights.globalcolor,
 		step : 1,
@@ -45,7 +67,7 @@ $(function() {
 			decimals : 0
 		})
 	});
-	
+
 	noUiSlider.create($('#local-color-weight').get(0), {
 		start : 100 * ScoreWeights.localcolor,
 		step : 1,
@@ -57,7 +79,7 @@ $(function() {
 			decimals : 0
 		})
 	});
-	
+
 	noUiSlider.create($('#edge-weight').get(0), {
 		start : 100 * ScoreWeights.edge,
 		step : 1,
@@ -69,7 +91,7 @@ $(function() {
 			decimals : 0
 		})
 	});
-	
+
 	noUiSlider.create($('#motion-weight').get(0), {
 		start : 100 * ScoreWeights.motion,
 		step : 1,
@@ -81,23 +103,63 @@ $(function() {
 			decimals : 0
 		})
 	});
-	
 
-	function updateSliders(){
-		ScoreWeights.globalcolor = $('#global-color-weight').get(0).noUiSlider.get();
-		ScoreWeights.localcolor = $('#local-color-weight').get(0).noUiSlider.get();
-		ScoreWeights.edge = $('#edge-weight').get(0).noUiSlider.get();
-		ScoreWeights.motion = $('#motion-weight').get(0).noUiSlider.get();
-		normalizeScoreWeights();
-		
+	$('#global-color-weight').get(0).noUiSlider.on('change', function(_, __, val){
+
+		if(val > ScoreWeights.globalcolor){
+			readSliders();
+			var sum = sumWeights();
+			if(sum > 100){
+				var scale = (100 - val) / (sum - ScoreWeights.globalcolor);
+				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
+				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
+				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+			}
+		}
 		updateScores(true);
-		
-	}
-	
-	$('#global-color-weight').get(0).noUiSlider.on('change', updateSliders);
-	$('#local-color-weight').get(0).noUiSlider.on('change', updateSliders);
-	$('#edge-weight').get(0).noUiSlider.on('change', updateSliders);
-	$('#motion-weight').get(0).noUiSlider.on('change', updateSliders);
+	});
+	$('#local-color-weight').get(0).noUiSlider.on('change', function(_, __, val){
+
+		if(val > ScoreWeights.localcolor){
+			readSliders();
+			var sum = sumWeights();
+			if(sum > 100){
+				var scale = (100 - val) / (sum - ScoreWeights.localcolor);
+				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
+				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
+				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+			}
+		}
+		updateScores(true);
+	});
+	$('#edge-weight').get(0).noUiSlider.on('change', function(_, __, val){
+
+		if(val > ScoreWeights.edge){
+			readSliders();
+			var sum = sumWeights();
+			if(sum > 100){
+				var scale = (100 - val) / (sum - ScoreWeights.edge);
+				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
+				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
+				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+			}
+		}
+		updateScores(true);
+	});
+	$('#motion-weight').get(0).noUiSlider.on('change', function(_, __, val){
+
+		if(val > ScoreWeights.motion){
+			readSliders();
+			var sum = sumWeights();
+			if(sum > 100){
+				var scale = (100 - val) / (sum - ScoreWeights.motion);
+				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
+				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
+				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
+			}
+		}
+		updateScores(true);
+	});
 
 	/*  color picker  */
 	$("#colorInput").spectrum({
@@ -116,7 +178,7 @@ $(function() {
  "#747e43",
  "#b3c65e",
  "#66aa83",
- ],["#88d4e9",		
+ ],["#88d4e9",
  "#5d6c8b",
  "#4a1ecf",
  "#b890bd",
@@ -128,14 +190,14 @@ $(function() {
 				shotInputs[el].color.setColor(color);
 			}
 		}
-	}); 
-	
+	});
+
 	/*  context menu  */
 	context.init({
 		compress : true
-	}); 
+	});
 
-	
+
 	/*  buttons  */
 	$("#btnAddCanvas").click(function(e) {
 		e.preventDefault();
@@ -147,9 +209,6 @@ $(function() {
 			$('#sidebarextension').removeClass('open');
 			$('#btnShowSidebar').removeClass('open');
 
-		} else if ($('#filterbutton').parent().hasClass('active')) {
-			$('#sidebarextension').addClass('open');
-			$('#btnShowSidebar').addClass('open');
 		}
 		$('#sidebar').toggleClass('open');
 		$('body').toggleClass('push-toright');
@@ -167,6 +226,7 @@ $(function() {
 		$('.query-input-container').show();
 		$('.colorsketch').show();
 		$('.motionsketch').hide();
+		$('.objectsketch').hide();
 		$('#map').hide();
 
 		$('#btnAddCanvas').show();
@@ -182,6 +242,7 @@ $(function() {
 		$('.query-input-container').show();
 		$('.colorsketch').hide();
 		$('.motionsketch').show();
+		$('.objectsketch').show();
 		$('#map').hide();
 
 		$('#btnAddCanvas').show();
@@ -211,21 +272,24 @@ $(function() {
 
 	$('#filterbutton').on('click', function(event) {
 		$('.motionsketch').show();
+		$('.objectsketch').show();
+		$('.audiosketch').hide();
 		$('#color-tool-pane').hide();
 		$('#sidebarextension').addClass('open');
 		$('#btnShowSidebar').addClass('open');
+		$('#concept-selection').hide();
 		$('#filter-selection').show();
 		$(this).parent().siblings().removeClass('active');
 		$(this).parent().addClass('active');
-	}); 
+	});
 
 	$('#search-button').click(function(){
 		search();
-		$('#btnShowSidebar').click();
+//		$('#btnShowSidebar').click();
 	});
-	
+
 	$('#sequence-segmentation-button').click(sequenceSegmentation);
-	
+
 	$('#rf-button').click(function(){
 		search(-1, rf_positive, rf_negative);
 	});
@@ -234,25 +298,26 @@ $(function() {
 		videojs('videoPlayer').currentTime(shotStartTime);
 		videojs('videoPlayer').play();
 	});
-	
+
 	$('#new-filter-button').click(function() {
 		if(!$('#new_filter').get(0).validity.patternMismatch){
 			var filterName = $('#new_filter').val();
 			addResultSetFilter('v' + filterName);
 			$('#new_filter').val('');
 		}
-		
+
 	});
 
 	/*  add first canvas  */
 	newShotInput();
-	
+
 	/* video player */
 	videojs('videoPlayer').on('loadeddata', function() {
 		videojs('videoPlayer').currentTime(shotStartTime);
 		videojs('videoPlayer').play();
 	});
-	
 
+	$('#btnShowSidebar').click();
+	setTimeout(function(){$('#btnShowTopbar').click();}, 500);
 
 });
