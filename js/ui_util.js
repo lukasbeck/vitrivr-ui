@@ -10,7 +10,7 @@ function newShotInput() {
 	container.addClass('query-input-container');
 	container.attr('id', id);
 	container.hide();
-	
+
 
 	var color = $('<canvas>');
 	color.addClass('queryinput').addClass('colorsketch');
@@ -25,20 +25,20 @@ function newShotInput() {
 	/*var objects = $('<div>');
 	objects.addClass('queryinput').addClass('objectsketch').addClass('dropzone');
 	container.append(objects);*/
-	
+
 	var concepts = $('<canvas>');
 	concepts.addClass('queryinput').addClass('objectsketch');
 	concepts.attr('width', '360').attr('height', '288');
 	container.append(concepts);
-	
+
 /*
 	var audio = $('<div>');
 	audio.addClass('queryinput').addClass('audiosketch');
 	audio.append('<audio id="audio_' + id + '" src="" controls=""></audio>');
-	var recordButton = $('<button id="record_' + id + '" class="waves-effect waves-light btn btn-large red" style="width: 300px">' + 
-	'<i class="material-icons left">mic_none</i>Record' + 
+	var recordButton = $('<button id="record_' + id + '" class="waves-effect waves-light btn btn-large red" style="width: 300px">' +
+	'<i class="material-icons left">mic_none</i>Record' +
 	'</button>');
-	
+
 	recordButton.click(function(){
 		var button = $(this);
 		if(button.data('recording')){
@@ -56,7 +56,7 @@ function newShotInput() {
 			Fr.voice.record(false);
 		}
 	});
-	
+
 	audio.append(recordButton);
 	container.append(audio);*/
 
@@ -101,7 +101,7 @@ function newShotInput() {
 		}
 	}
 	]);
-	
+
 	context.attach('#' + id + '>.motionsketch', [{
 		header : 'Layer'
 	}, {
@@ -122,7 +122,7 @@ function newShotInput() {
 		}
 	}
 	]);
-	
+
 	/*context.attach('#' + id + '>.objectsketch', [{
 		header : 'Layer'
 	}, {
@@ -141,7 +141,7 @@ function newShotInput() {
 		}
 	}
 	]);*/
-	
+
 	/*context.attach('#' + id + '>.audiosketch', [{
 		header : 'Layer'
 	}, {
@@ -169,66 +169,101 @@ function newShotInput() {
 }
 
 function addVideoContainer(id){
-	return $('#results').append('<div id="v' + id + '" class="videocontainer"> </div>');
+	return $('.resultsContainer').append('<div id="v' + id + '" class="videocontainer"></div>');
 }
 
 function addShotContainer(shotInfo, containerId){ //TODO optimize
 	containerId = containerId || shotInfo.videoid;
+	var thumbnail = thumbnailHost + '' + shotInfo.videoid + '/' + shotInfo.shotid + '.' + thumbnailFileType
+	//console.log("Adding shot container with video_id: " + containerId + ", and location: " + Videos[containerId].lat + ", " + Videos[containerId].lng);
+
 	$('#v' + containerId).append(
-		
-		'<div class="shotbox" id="s' + shotInfo.shotid + '" data-startframe="' + shotInfo.start + '" data-endframe="' + shotInfo.start + '">' + 
+	'<div class="shotbox" id="s' + shotInfo.shotid + '" data-startframe="' + shotInfo.start + '" data-endframe="' + shotInfo.start + '">' +
 		'<span class="preview">' +
-		'<img class="thumbnail" src="' + thumbnailHost + '/' + shotInfo.videoid + '/' + shotInfo.shotid + '.' + thumbnailFileType + '" />' + //see config.js
-		'<div class="tophoverbox">' +
-		'<span class="material-icons searchbutton">search</span>' +
-		'<span class="material-icons playbutton">play_arrow</span>' +
-		'<span class="material-icons relevanceFeedback relevanceFeedback-add">add</span>' +
-		'<span class="material-icons relevanceFeedback">remove</span>' +
-	//	'<span class="material-icons showid">textsms</span>' +
-	//	'<span class="material-icons load_video">movie</span>' +
-		'</div>' +
-		'<div class="bottomhoverbox">' +
-		'<span class="score"> 0% </span>' +
-		'<span class="position"> ' + shotInfo.start + ' - ' + shotInfo.end + ' </span>' +
-		'</div>' +
+			'<img class="thumbnail" src="' + thumbnail + '" />' + //see config.js
+			'<div class="tophoverbox">' +
+				'<span class="material-icons searchbutton">search</span>' +
+//				'<span class="material-icons playbutton">play_arrow</span>' +
+				'<span class="material-icons relevanceFeedback relevanceFeedback-add">add</span>' +
+				'<span class="material-icons relevanceFeedback">remove</span>' +
+//				'<span class="material-icons showid">textsms</span>' +
+//				'<span class="material-icons load_video">movie</span>' +
+			'</div>' +
+			'<div class="bottomhoverbox">' +
+				'<span class="score">0%</span>' +
+				'<span class="position"> ' + /* shotInfo.start + ' - ' + shotInfo.end + */ ' </span>' +
+			'</div>' +
 		'</span>' +
-		'</div>'
-		
+	'</div>'
 	);
+
+	$('#v' + containerId + ' > div > span > img.thumbnail').on('click', function(e) {
+		if (this === e.target) {
+			// Only open if image itself is clicked
+			showImage(containerId);
+		}
+	});
+
 	//$('#s' + shotInfo.shotid + '>span>div>.playbutton').on('click', playShot);
-	$('#s' + shotInfo.shotid + '>span>div>.playbutton').on('click', prepare_playback);
+	//$('#s' + shotInfo.shotid + '>span>div>.playbutton').on('click', prepare_playback);
 	$('#s' + shotInfo.shotid + '>span>div>.searchbutton').on('click', similaritySearch);
 	$('#s' + shotInfo.shotid + '>span>div>.relevanceFeedback').on('click', relevanceFeedback);
 	//$('#s' + shotInfo.shotid + '>span>div>.showid').on('click', showVideoId);
 	//$('#s' + shotInfo.shotid + '>span>div>.load_video').on('click', load_video);
+
+	var videoData = Videos[containerId];
+	var latLng = { lat: videoData.lat, lng: videoData.lng };
+	if (latLng.lat !== undefined && latLng.lng !== undefined) {
+		var randLat = latLng.lat + Math.random() * 0.00006 - 0.00003;
+		var randLng = latLng.lng + Math.random() * 0.00006 - 0.00003;
+		window.map.addResult(containerId, { lat: randLat, lng: randLng }, thumbnail);
+	}
+
+	var time = videoData.time;
+	if (time !== undefined) {
+		var randTime = time + Math.random() * 60000 - 30000;
+		window.timeline.addResult(containerId, randTime, thumbnail);
+	}
 }
 
 function updateScoreInShotContainer(id, score){
 	var container = $('#s' + id);
-	container.css('background-color', scoreToColor(score));
+	container.css('background-color', '#' + scoreToHexColor(score));
 	container.data('score', score);
 	container.find('.score').html(Math.round(score * 100) + '%');
+
+	var videoId = Shots[id].videoid;
+	window.map.setScore(videoId, score);
+	window.timeline.setScore(videoId, score);
 }
 
 /**
  * Scales from 0 to max
  * Perfect Matches => from 0.8 to 1 will receive a g-value of max
  */
-function scoreToColor(pct) {
+function scoreToRgb(pct) {
 	var max = 0.8;
 	var ideal = 230.0;
 	if (pct > max) {
-		var r = 0;
-		var g = ideal;
-		var b = 0;
-	} else {
-		var r = Math.floor((1.0 - pct / max) * (255.0));
-		var g = ideal + Math.floor((1.0 - pct / max) * (255.0 - ideal));
-		var b = Math.floor((1.0 - pct / max) * (255.0 ));
+		return { r: 0, g: ideal, b: 0 };
 	}
-	return 'rgb(' + r + ',' + g + ',' + b + ')';
+
+	var r =         Math.floor((1.0 - pct / max) * (255.0));
+	var g = ideal + Math.floor((1.0 - pct / max) * (255.0 - ideal));
+	var b =         Math.floor((1.0 - pct / max) * (255.0 ));
+
+	return { r: r, g: g, b: b };
 }
 
+function componentToHex(c) {
+	var hex = c.toString(16).toUpperCase();
+	return hex.length == 1 ? "0" + hex : hex;
+}
+
+function scoreToHexColor(pct) {
+	var rgb = scoreToRgb(pct);
+	return componentToHex(rgb.r) + componentToHex(rgb.g) + componentToHex(rgb.b);
+}
 
 function sortVideoContainer(videoid){
 	try{
@@ -243,12 +278,21 @@ function sortVideoContainer(videoid){
 
 function sortVideos(){
 	try{
-		tinysort('#results>.videocontainer', {
+		tinysort('.resultsContainer > .videocontainer', {
 			data : 'score',
 			order : 'desc'
 		});
 	}catch (e){
 		console.warn(e);
+	}
+
+	// Set higher pins scoring on higher index
+	var containers = $('.resultsContainer > .videocontainer');
+	for (var i = 0; i < containers.length; ++i) {
+		var videoId = Number($(containers[i]).attr('id').substr(1));
+		var order = $(containers[i]).css('order');
+		var zIndex = containers.length - order;
+		window.map.setIndex(videoId, zIndex);
 	}
 }
 
@@ -256,7 +300,7 @@ function sortVideos(){
 function updateScores(segmentedVideos) {
 	readSliders();
 	var weightSum = sumWeights();
-	
+
 	for (var key in Shots) {
 		var shotId = Shots[key].shotid;
 
@@ -266,13 +310,13 @@ function updateScores(segmentedVideos) {
 			score += scoreContainer[key] * ScoreWeights[key];
 		}
 		updateScoreInShotContainer(shotId, score / weightSum);
-		
+
 	}
 
 	segmentedVideos = segmentedVideos || false;
 	if(segmentedVideos){
 		var ids = new Array();
-		$('#results>.videocontainer').each(function(index) {
+		$('.resultsContainer > .videocontainer').each(function(index) {
 		  ids.push($(this).attr('id').substring(1));
 		});
 		for(var key in ids){
@@ -284,7 +328,7 @@ function updateScores(segmentedVideos) {
 		updateVideoScore(key);
 		}
 	}
-	
+
 
 	sortVideos();
 }
@@ -314,13 +358,13 @@ function sequenceSegmentation(){
 			}
 			$('#v' + videoId).remove();
 		}
-		
+
 	}
 	updateScores(true);
-	
+
 }
 
-function playShot(event){
+/*function playShot(event){
 	var shotBox = $(this).parent().parent().parent();
 	var shotId = parseInt(shotBox.attr('id').substring(1));
 	var shotInfo = Shots[shotId];
@@ -329,7 +373,7 @@ function playShot(event){
 	shotStartTime = shotInfo.start / 25;
 	var player = videojs('videoPlayer');
 
-	
+
   $('#video-modal').openModal({
   	in_duration: 0,
   	out_duration: 0,
@@ -340,7 +384,18 @@ function playShot(event){
   		player.pause();
   	}
   });
-}
+}*/
+
+function showImage(videoId) {
+	var path = "collection/" + Videos[videoId].path;
+	$('.modal > .modal-content > img').attr('src', '');
+	$('.modal > .modal-content > img').attr('src', path);
+	$('.modal').openModal({
+		dismissable: true,
+		in_duration: 500,
+		out_duration: 200
+	});
+};
 
 function similaritySearch(event){
 	var shotBox = $(this).parent().parent().parent();
@@ -354,7 +409,7 @@ function relevanceFeedback(event){
 	var shotBox = _this.parent().parent().parent();
 	var shotId = parseInt(shotBox.attr('id').substring(1));
 	var positive = _this.hasClass('relevanceFeedback-add');
-	
+
 	if(positive){
 		if($.inArray(shotId, rf_positive) >= 0){ //remove
 			_this.css('color', 'white');
@@ -380,14 +435,16 @@ function relevanceFeedback(event){
 			_this.css('color', 'red');
 		}
 	}
-	
+
 	if(rf_positive.length > 0){
-		$('#rf-button').show();
+		$('#rf-button').removeClass('disabled');
+		$('#rf-button').addClass('waves-effect waves-light');
 	}else{
-		$('#rf-button').hide();
+		$('#rf-button').addClass('disabled');
+		$('#rf-button').removeClass('waves-effect waves-light');
 	}
-	
-	
+
+
 	console.log(rf_positive);
 	console.log(rf_negative);
 }
@@ -402,7 +459,7 @@ function prepare_playback(event){
 	var videoInfo = Videos[shotInfo.videoid];
 	shotStartTime = shotInfo.start / (videoInfo.frames / videoInfo.seconds);
 	var player = videojs('videoPlayer');
-		
+
    $('#video-modal').openModal({
   	in_duration: 0,
   	out_duration: 0,
@@ -424,10 +481,10 @@ function load_video(event){
 
 function addResultSetFilter(resultSetName){
 	$('#resultset-filter-selection').append(
-		'<p><input class="with-gap" name="result-set" type="radio" id="' + 
-		resultSetName + 
+		'<p><input class="with-gap" name="result-set" type="radio" id="' +
+		resultSetName +
 		'"/><label for="' +
-		resultSetName + 
+		resultSetName +
 		'">' +
 		resultSetName +
 		'</label></p>'
@@ -435,13 +492,13 @@ function addResultSetFilter(resultSetName){
 }
 var progressCounter = 0;
 function showProgress(progress){
-	$('#loading').show();
-	$('#loading>.determinate').css('width', Math.round(100 * progress) + '%');
+	$('.progress').show();
+	$('.progress > .determinate').css('width', Math.round(100 * progress) + '%');
 	progressCounter = progress;
 }
 
 function hideProgress(){
-	$('#loading').hide();
+	$('.progress').hide();
 }
 
 function getNumberOfShotInputs(){
@@ -453,7 +510,7 @@ function destroyCanvas(id) {
 	context.destroy('#' + id + '>.motionsketch' );
 	context.destroy('#' + id + '>.objectsketch' );
 	context.destroy('#' + id + '>.audiosketch' );
-	
+
 	delete shotInputs[id];
 	$('#' + id).slideUp(200, function() {
 		$('#' + id).remove();
@@ -468,7 +525,7 @@ function showSketchSuggestions(shotInputId){
 	if(suggestionPanel.is(":visible")){
 		suggestionPanel.hide();
 	}
-	
+
 	var top = $('#shotInput_' + shotInputId).offset().top + 340;
 	suggestionPanel.css('top', top);
 	suggestionPanel.fadeIn(200);
@@ -483,7 +540,7 @@ function hideSketchSuggestions(callback){
 			callback();
 		}
 	});
-	
+
 }
 
 function addSketchSuggestion(name, id, width, height, dx, dy, shtoInputId){
@@ -495,7 +552,7 @@ function addSketchSuggestion(name, id, width, height, dx, dy, shtoInputId){
 	var img = $('<img width="250" height="250" src="' + previewUrl + '" />');
 	suggestion.append(img);
 	suggestion.append('<div>' + name + '</div>');
-	
+
 	img.click(function(e){
 		var sketchImage = $('<img width="' + width + '" height="' + height + '" src="' + imageUrl + '" />');
 		sketchImage.addClass('autoCompletedImage');
@@ -512,7 +569,7 @@ function addSketchSuggestion(name, id, width, height, dx, dy, shtoInputId){
 			readSliders();
 			var val = 50;
 			$('#concept-weight').get(0).noUiSlider.set(val);
-			
+
 			readSliders();
 			var sum = sumWeights();
 			if(sum > 100){
@@ -521,17 +578,19 @@ function addSketchSuggestion(name, id, width, height, dx, dy, shtoInputId){
 				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
 				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
 				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+				$('#spatial-weight').get(0).noUiSlider.set(ScoreWeights.spatial * scale);
+				$('#temporal-weight').get(0).noUiSlider.set(ScoreWeights.temporal * scale);
 			}
-		
+
 		updateScores(true);
-		
+
 		}
-		
+
 	});
-	
-	
+
+
 	suggestionPanel.append(suggestion);
-	
+
 }
 var hideSketchSuggestionsTimeOut;
 

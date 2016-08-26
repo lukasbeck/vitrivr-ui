@@ -6,10 +6,42 @@ function remove_emenent(arr, val) {
 	return i>-1 ? this.splice(i, 1) : [];
 };
 
-/* map */
-var map;
 $(document).ready(function() {
-	map = new Map($('#map').get(0));
+	window.map = new Map($('.map')[0]);
+	window.timeline = new Timeline($('.timeline')[0]);
+
+	$('.modal').click(function() {
+		$('.modal').closeModal();
+	});
+
+	$('.timelineContainer, .mapContainer, .sketchContainer, .resultsContainer').click(function(e) {
+		if (this != e.target) {
+			return;
+		}
+
+		// Get current container
+		var container = this; //$(this).parent()[0];
+
+		// Get other row element
+		var thisRow = container;
+		var otherRow = $(container).siblings()[0];
+		var thisCol = $(container).parent()[0];
+		var otherCol = $(thisCol).siblings()[2];
+
+		window.map.saveCenter();
+		$('.settings').toggleClass('minimize');
+		$(otherCol).toggleClass('minimize');
+		$(thisCol).toggleClass('maximize');
+
+		$(otherRow).toggleClass('minimize');
+		$(thisRow).toggleClass('maximize');
+
+		var intervalId = window.setInterval(function() { window.map.resize(); }, 250);
+		$(this).one('transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd', function() {
+			window.clearInterval(intervalId);
+			window.map.resize();
+		});
+	});
 });
 
 function updateSliders() {
@@ -18,6 +50,8 @@ function updateSliders() {
 	ScoreWeights.localcolor = $('#local-color-weight').get(0).noUiSlider.get();
 	ScoreWeights.edge = $('#edge-weight').get(0).noUiSlider.get();
 	ScoreWeights.motion = $('#motion-weight').get(0).noUiSlider.get();
+	ScoreWeights.spatial = $('#spatial-weight').get(0).noUiSlider.get();
+	ScoreWeights.temporal = $('#temporal-spatial').get(0).noUiSlider.get();
 	normalizeScoreWeights();
 
 	updateScores(true);
@@ -30,7 +64,18 @@ function readSliders() {
 	ScoreWeights.localcolor = $('#local-color-weight').get(0).noUiSlider.get();
 	ScoreWeights.edge = $('#edge-weight').get(0).noUiSlider.get();
 	ScoreWeights.motion = $('#motion-weight').get(0).noUiSlider.get();
+	ScoreWeights.spatial = $('#spatial-weight').get(0).noUiSlider.get();
+	ScoreWeights.temporal = $('#temporal-weight').get(0).noUiSlider.get();
 
+}
+
+function setSliders() {
+	$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor);
+	$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor);
+	$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge);
+	$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion);
+	$('#spatial-weight').get(0).noUiSlider.set(ScoreWeights.spatial);
+	$('#temporal-weight').get(0).noUiSlider.set(ScoreWeights.temporal);
 }
 
 
@@ -57,7 +102,7 @@ $(function() {
 	});
 
 	noUiSlider.create($('#global-color-weight').get(0), {
-		start : 100 * ScoreWeights.globalcolor,
+		start : ScoreWeights.globalcolor,
 		step : 1,
 		range : {
 			'min' : 0,
@@ -69,7 +114,7 @@ $(function() {
 	});
 
 	noUiSlider.create($('#local-color-weight').get(0), {
-		start : 100 * ScoreWeights.localcolor,
+		start : ScoreWeights.localcolor,
 		step : 1,
 		range : {
 			'min' : 0,
@@ -81,7 +126,7 @@ $(function() {
 	});
 
 	noUiSlider.create($('#edge-weight').get(0), {
-		start : 100 * ScoreWeights.edge,
+		start : ScoreWeights.edge,
 		step : 1,
 		range : {
 			'min' : 0,
@@ -93,7 +138,31 @@ $(function() {
 	});
 
 	noUiSlider.create($('#motion-weight').get(0), {
-		start : 100 * ScoreWeights.motion,
+		start : ScoreWeights.motion,
+		step : 1,
+		range : {
+			'min' : 0,
+			'max' : 100
+		},
+		format : wNumb({
+			decimals : 0
+		})
+	});
+
+	noUiSlider.create($('#spatial-weight').get(0), {
+		start : ScoreWeights.spatial,
+		step : 1,
+		range : {
+			'min' : 0,
+			'max' : 100
+		},
+		format : wNumb({
+			decimals : 0
+		})
+	});
+
+	noUiSlider.create($('#temporal-weight').get(0), {
+		start : ScoreWeights.temporal,
 		step : 1,
 		range : {
 			'min' : 0,
@@ -114,6 +183,8 @@ $(function() {
 				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
 				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
 				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+				$('#spatial-weight').get(0).noUiSlider.set(ScoreWeights.spatial * scale);
+				$('#temporal-weight').get(0).noUiSlider.set(ScoreWeights.temporal * scale);
 			}
 		}
 		updateScores(true);
@@ -128,12 +199,14 @@ $(function() {
 				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
 				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
 				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+				$('#spatial-weight').get(0).noUiSlider.set(ScoreWeights.spatial * scale);
+				$('#temporal-weight').get(0).noUiSlider.set(ScoreWeights.temporal * scale);
 			}
 		}
 		updateScores(true);
 	});
 	$('#edge-weight').get(0).noUiSlider.on('change', function(_, __, val){
-
+		console.log(_);
 		if(val > ScoreWeights.edge){
 			readSliders();
 			var sum = sumWeights();
@@ -142,6 +215,8 @@ $(function() {
 				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
 				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
 				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+				$('#spatial-weight').get(0).noUiSlider.set(ScoreWeights.spatial * scale);
+				$('#temporal-weight').get(0).noUiSlider.set(ScoreWeights.temporal * scale);
 			}
 		}
 		updateScores(true);
@@ -156,6 +231,40 @@ $(function() {
 				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
 				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
 				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
+				$('#spatial-weight').get(0).noUiSlider.set(ScoreWeights.spatial * scale);
+				$('#temporal-weight').get(0).noUiSlider.set(ScoreWeights.temporal * scale);
+			}
+		}
+		updateScores(true);
+	});
+	$('#spatial-weight').get(0).noUiSlider.on('change', function(_, __, val){
+
+		if(val > ScoreWeights.spatial){
+			readSliders();
+			var sum = sumWeights();
+			if(sum > 100){
+				var scale = (100 - val) / (sum - ScoreWeights.spatial);
+				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
+				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
+				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
+				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+				$('#temporal-weight').get(0).noUiSlider.set(ScoreWeights.temporal * scale);
+			}
+		}
+		updateScores(true);
+	});
+	$('#temporal-weight').get(0).noUiSlider.on('change', function(_, __, val){
+
+		if(val > ScoreWeights.spatial){
+			readSliders();
+			var sum = sumWeights();
+			if(sum > 100){
+				var scale = (100 - val) / (sum - ScoreWeights.spatial);
+				$('#global-color-weight').get(0).noUiSlider.set(ScoreWeights.globalcolor * scale);
+				$('#local-color-weight').get(0).noUiSlider.set(ScoreWeights.localcolor * scale);
+				$('#edge-weight').get(0).noUiSlider.set(ScoreWeights.edge * scale);
+				$('#motion-weight').get(0).noUiSlider.set(ScoreWeights.motion * scale);
+				$('#spatial-weight').get(0).noUiSlider.set(ScoreWeights.spatial * scale);
 			}
 		}
 		updateScores(true);
@@ -228,6 +337,7 @@ $(function() {
 		$('.motionsketch').hide();
 		$('.objectsketch').hide();
 		$('#map').hide();
+		$('#timeline').hide();
 
 		$('#btnAddCanvas').show();
 		$('#color-tool-pane').show();
@@ -238,12 +348,14 @@ $(function() {
 		$(this).parent().addClass('active');
 	});
 
+	/*
 	$('#motionsketchbutton').on('click', function(event) {
 		$('.query-input-container').show();
 		$('.colorsketch').hide();
 		$('.motionsketch').show();
 		$('.objectsketch').show();
 		$('#map').hide();
+		$('#timeline').hide();
 
 		$('#btnAddCanvas').show();
 		$('#color-tool-pane').hide();
@@ -253,13 +365,31 @@ $(function() {
 		$(this).parent().siblings().removeClass('active');
 		$(this).parent().addClass('active');
 	});
+	*/
 
 	$('#spatialbutton').on('click', function(event) {
 		$('.query-input-container').hide();
 		$('.colorsketch').hide();
 		$('.motionsketch').hide();
 		$('#map').show();
+		$('#timeline').hide();
 		map.resize();
+
+		$('#btnAddCanvas').hide();
+		$('#color-tool-pane').hide();
+		$('#sidebarextension').removeClass('open');
+		$('#btnShowSidebar').removeClass('open');
+
+		$(this).parent().siblings().removeClass('active');
+		$(this).parent().addClass('active');
+	});
+
+	$('#temporalbutton').on('click', function(event) {
+		$('.query-input-container').hide();
+		$('.colorsketch').hide();
+		$('.motionsketch').hide();
+		$('#map').hide();
+		$('#timeline').show();
 
 		$('#btnAddCanvas').hide();
 		$('#color-tool-pane').hide();
@@ -288,10 +418,18 @@ $(function() {
 //		$('#btnShowSidebar').click();
 	});
 
-	$('#sequence-segmentation-button').click(sequenceSegmentation);
+//	$('#sequence-segmentation-button').click(sequenceSegmentation);
 
-	$('#rf-button').click(function(){
-		search(-1, rf_positive, rf_negative);
+	$('#rf-button').click(function() {
+		if (!$(this).hasClass('disabled')) {
+			search(-1, rf_positive, rf_negative);
+		}
+	});
+
+	$('#slider-defaults-button').click(function() {
+		restoreDefaultScoreWeights();
+		setSliders();
+		updateScores(true);
 	});
 
 	$('#replay-at-position-button').click(function(){
@@ -311,11 +449,22 @@ $(function() {
 	/*  add first canvas  */
 	newShotInput();
 
+	/* Check & load search image if given */
+	if (window.initialQuery !== undefined) {
+		console.log(window.initialQuery);
+		console.log(shotInputs);
+		console.log(window.map);
+		shotInputs['shotInput_0'].color.loadImageFromUrl(window.initialQuery.imagePath);
+		window.map.setLatLng({'lat': window.initialQuery.lat, 'lng': window.initialQuery.lng});
+	}
+
 	/* video player */
+	/*
 	videojs('videoPlayer').on('loadeddata', function() {
 		videojs('videoPlayer').currentTime(shotStartTime);
 		videojs('videoPlayer').play();
 	});
+	*/
 
 	$('#btnShowSidebar').click();
 	setTimeout(function(){$('#btnShowTopbar').click();}, 500);

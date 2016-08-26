@@ -19,21 +19,36 @@ function getCategories(){
 	if(ScoreWeights.motion > 0){
 		categories.push('motion');
 	}
+	if(ScoreWeights.spatial > 0 && map.hasQuery()){
+		categories.push('spatial');
+	}
+	if(ScoreWeights.temporal > 0 && timeline.hasQuery()){
+		categories.push('temporal');
+	}
 	return categories;
 }
 
-var ScoreWeights = {
-	globalcolor: 0.1,
-	localcolor: 0.6,
-	edge: 0.3,
-	motion: 0,
-};
+var ScoreWeights;
+restoreDefaultScoreWeights();
+
+function restoreDefaultScoreWeights() {
+	ScoreWeights = {
+		globalcolor: 6,
+		localcolor: 39,
+		edge: 15,
+		motion: 0,
+		spatial: 28,
+		temporal: 12
+	};
+}
 
 function sumWeights(){
-	var sum = parseInt(ScoreWeights.globalcolor) + 
-		parseInt(ScoreWeights.localcolor) + 
-		parseInt(ScoreWeights.edge) + 
-		parseInt(ScoreWeights.motion);
+	var sum = parseInt(ScoreWeights.globalcolor) +
+		parseInt(ScoreWeights.localcolor) +
+		parseInt(ScoreWeights.edge) +
+		parseInt(ScoreWeights.motion) +
+		parseInt(ScoreWeights.spatial) +
+		parseInt(ScoreWeights.temporal);
 		return sum > 0 ? sum : 1;
 }
 
@@ -46,6 +61,8 @@ function normalizeScoreWeights(){
 		ScoreWeights.localcolor /= sum;
 		ScoreWeights.edge /= sum;
 		ScoreWeights.motion /= sum;
+		ScoreWeights.spatial /= sum;
+		ScoreWeights.temporal /= sum;
 	}
 }
 
@@ -53,9 +70,14 @@ function clearResults(){
 	Videos = {};
 	Shots = {};
 	Scores = {};
-	$('#results').empty();
-	$('#sequence-segmentation-button').hide();
-	$('#rf-button').hide();
+	$('.resultsContainer > .videocontainer').remove();
+//	$('#sequence-segmentation-button').hide();
+	window.setTimeout(function() {
+		$('#rf-button').addClass('disabled');
+		$('#rf-button').removeClass('waves-effect waves-light');
+	}, 250);
+	window.map.clearResults();
+	window.timeline.clearResults();
 }
 
 function search(id, positive, negative){
@@ -74,7 +96,7 @@ function search(id, positive, negative){
 		console.log("starting id-based search");
 		oboerequest(buildIdQuery(id));
 	}
-	
+
 }
 
 
@@ -106,7 +128,7 @@ function buildRFQuery() {
 function buildContextQuery() {
 
 	var shotids = new Array();
-	
+
 	for(var key in Shots){
 		shotids.push(Shots[key].shotid);
 	}
@@ -125,30 +147,42 @@ function buildVideoQuery(shotid){
 		query += "}}";
 
 	return query;
-	
+
 }
 
 function buildQuery(){ //TODO categories from sketch complete
-	
+
 	var query = "{\"queryType\":\"multiSketch\", \"query\":[";
-	
+
 	for(var key in shotInputs){
 		var shotInput = shotInputs[key];
-		
+
 		query += "{\"img\": \"" + shotInput.color.getDataURL() + "\",\n";
 		query += "\"motion\":" + shotInput.motion.getPaths() + ",\n";
+
+		if (map.hasQuery()) {
+			var latLng = map.getQuery();
+			query += '"spatial": {"lat": ' + latLng.lat() + ', "lng": ' + latLng.lng() + '},\n';
+		}
+
+		if (timeline.hasQuery()) {
+			query += '"temporal": {"time": ' + timeline.getQuery() + '},\n';
+		}
+
 		query += "\"categories\":" + JSON.stringify(getCategories()) + ",\n"; //see config.js
 		query += "\"concepts\":" + JSON.stringify(shotInput.conceptList) + ", \n";
 		query += "\"id\": " + 0 + "\n";
 		query += "},";
 	}
-	
+
 	query = query.slice(0, -1);
 	query += "],";
 	query += "\"resultname\":\"" + getResultName() + "\"}";
-		
+
+	console.log(query);
+
 	return query;
-	
+
 }
 
 function getResultName(){
@@ -176,69 +210,72 @@ function oboerequest(query, noContext) {
 			headers : headers
 		}).done(function(data) {
 			console.log("request done");
-			
+
 			for(key in Videos){
 				sortVideoContainer(key);
 				updateVideoScore(key);
 			}
-			
+
 			sortVideos();
-				$('#sequence-segmentation-button').show();
-				hideProgress();
+//				$('#sequence-segmentation-button').show();
+			hideProgress();
+
+			window.map.centerResults();
+			window.timeline.centerResults();
 
 			searchRunning = false;
-			
+
 		}).node('{type}', function(data) {
 			var type = data.type;
 			switch(type) {
-			
+
 			case "error":
-			
+
 				console.warn(data);
 				break;
-				
+
 			case "result":
-				
+
 				addResults([data]);
 
 				break;
 			case "shot":
-								
+
 				addShots([data]);
-				
+
 				break;
 			case "video":
-				
+
 				addVideos([data]);
-				
+
 				break;
 			case "resultname":
-				
+
 				addResultSetFilter(data.name);
-				
+
 				break;
-				
+
 			case "batch":
 				switch(data.inner){
 					case "result":
-						
+
 						addResults(data.array);
-		
+
 						break;
 					case "shot":
-										
+
 						addShots(data.array);
-						
+
 						break;
 					case "video":
-						
+
 						addVideos(data.array);
-						
+
 						break;
 				}
-				
+
 				break;
-				
+
 			default:
 				console.warn("type not recognized" + JSON.stringify(data));
 			}
@@ -287,13 +324,13 @@ function addShots(shotArray){
 }
 
 function addResults(resultArray){
-	
+
 	if(resultArray.length < 1){
 		return;
 	}
-	
+
 	var shotsToUpdateScore = {};
-	
+
 	for(var iter = 0; iter < resultArray.length; ++iter){
 		var data = resultArray[iter];
 		if (!(data.shotid in Scores)) {
@@ -309,18 +346,18 @@ function addResults(resultArray){
 			shotsToUpdateScore[data.shotid] = undefined;
 		}
 	}
-	
+
 	var shotIdsToUpdateScore = Object.keys(shotsToUpdateScore);
 	var weightSum = sumWeights();
 	for(var i = 0; i < shotIdsToUpdateScore.length; ++i){
 		var scoreContainer = Scores[shotIdsToUpdateScore[i]];
-		
+
 		var score = 0;
 		for (var key in ScoreWeights) {
 			score += scoreContainer[key] * ScoreWeights[key];
 		}
 		updateScoreInShotContainer(shotIdsToUpdateScore[i], score / weightSum);
-		
+
 	}
 
 	var categories = getCategories();
@@ -350,10 +387,10 @@ function updateVideoScore(videoid){
 	for(var i = 0; i < arr.length; ++i){
 		score = Math.max(score, arr[i]);
 	}
-	
+
 	if(score != score){
 		score = 0;
 	}
-	
+
 	$('#v' + videoid).data('score', score).attr('data-score', score); //second part is necessary to write score to html
 }

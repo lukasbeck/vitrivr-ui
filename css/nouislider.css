@@ -248,7 +248,7 @@
 }
 .noUi-target .noUi-active .range-label {
   border-radius: 15px 15px 15px 0;
-  transform: rotate(-45deg) translate(23px, -25px);
+  transform: rotate(-45deg) translate(16px, -17px);
 
 }
 .range-label span {
