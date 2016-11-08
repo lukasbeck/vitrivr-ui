@@ -11,3 +11,8 @@ In order for this UI to work, Cineast, ADAM and the supplementary PostgreSQL dat
 3. `cd cineast/docker && sudo docker build -t cs-spatial . && sudo docker run -d -p 5433:5432 cs-spatial`
 4. `php -S localhost:8080`
 
+## Add collection
+
+To add an image collection to the Cineast backend, run `core.run.ImageFeatureExtractionRunner` with the path to the collection. For example using `gradle`:
+
+    gradle -PmainClass=ch.unibas.cs.dbis.cineast.core.run.ImageFeatureExtractionRunner -PappArgs="['../vitrivr-ui/collection']" execute
