@@ -43,7 +43,22 @@ This repository contains the user interface of the vitrivr stack adapted to City
 
 ## Add collection
 
-To add an image collection to the backend, run `core.run.ImageFeatureExtractionRunner` with the path to the collection. For example using `gradle`:
+In the collection folder, every image should rest in its own folder, e.g.:
+
+    collection
+    ├── 20120111_015410
+    │   └── 20120111_015410.jpg
+    ├── 20120111_015417
+    │   └── 20120111_015417.jpg
+    ├── 20120111_015518
+    │   └── 20120111_015518.jpg
+    ├── 20120111_015523
+    │   └── 20120111_015523.jpg
+    ├── 20120111_015632
+    │   └── 20120111_015632.jpg
+    ...
+
+To add the image collection to the backend, run `core.run.ImageFeatureExtractionRunner` with the path to the collection. For example, using `gradle`:
 
     cd cs_cineast
     gradle -PmainClass=ch.unibas.cs.dbis.cineast.core.run.ImageFeatureExtractionRunner -PappArgs="['../cs_vitrivr-ui/collection']" execute
