@@ -39,6 +39,7 @@ This repository contains the user interface of the vitrivr stack adapted to City
 2. `sudo docker run -d -p 5432:5432 cs-adam`
 3. `sudo docker run -d -p 5433:5432 cs-spatial`
 4. `cd cs_vitrivr-ui && php -S localhost:8080`
+5. Open `localhost:8080` in your browser.
 
 
 ## Add collection
