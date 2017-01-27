@@ -24,7 +24,7 @@ This repository contains the user interface of the vitrivr stack adapted to City
    ```
    git clone https://github.com/lukasbeck/adam.git cs_ADAM
    cd cs_ADAM/docker/adamempty
-   sudo docker build -t adamempty .
+   sudo docker build -t cs-adam .
    ```
 
 3. Supplementary PostGIS database:
@@ -36,9 +36,9 @@ This repository contains the user interface of the vitrivr stack adapted to City
 ### Running
 
 1. `cd cs_cineast && java -jar build/libs/cineast.jar`
-2. `sudo docker run -d -p 5432:5432 adamempty`
+2. `sudo docker run -d -p 5432:5432 cs-adam`
 3. `sudo docker run -d -p 5433:5432 cs-spatial`
-4. `php -S localhost:8080`
+4. `cd cs_vitrivr-ui && php -S localhost:8080`
 
 
 ## Add collection
